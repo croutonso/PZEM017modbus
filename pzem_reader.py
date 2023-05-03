@@ -1,12 +1,23 @@
 import minimalmodbus
 import serial
 import time
+import pyudev
 from contextlib import closing
 
 DEVICE_ADDRESS = 0x01
 BAUD_RATE = 9600
 TIMEOUT = 1
 PORT = '/dev/ttyUSB0'
+
+def reset_usb_device():
+    context = pyudev.Context()
+    
+    for device in context.list_devices(subsystem='tty'):
+        if device.get('ID_BUS') == 'usb':
+            usb_device = device.find_parent('usb', 'usb_device')
+            print(f"Resetting USB device: {usb_device.get('DEVNAME')}")
+            usb_device.reset()
+            break
 
 def read_pzem_data():
     instrument = minimalmodbus.Instrument(PORT, DEVICE_ADDRESS)
