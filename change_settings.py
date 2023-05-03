@@ -6,11 +6,13 @@ SLAVE_ADDRESS = 0x01
 DEVICE_PORT = '/dev/ttyUSB0'
 DEVICE_BAUDRATE = 9600
 DEVICE_PARITY = serial.PARITY_NONE
+DEVICE_STOPBITS = 2
 
-def connect_modbus_device(port, baudrate, parity):
+def connect_modbus_device(port, baudrate, parity, stopbits):
     instrument = minimalmodbus.Instrument(port, SLAVE_ADDRESS)
     instrument.serial.baudrate = baudrate
     instrument.serial.parity = parity
+    instrument.serial.stopbits = stopbits
     return instrument
 
 def display_menu():
@@ -58,34 +60,38 @@ def reset_energy(instrument):
         print("Energy reset canceled.")
 
 def main():
-    instrument = connect_modbus_device(DEVICE_PORT, DEVICE_BAUDRATE, DEVICE_PARITY)
-
+    instrument = connect_modbus_device(DEVICE_PORT, DEVICE_BAUDRATE, DEVICE_PARITY, DEVICE_STOPBITS)
+    
     while True:
         display_menu()
         user_choice = int(input("Enter your choice: "))
-
-        if user_choice == 1:
-            set_high_voltage_alarm_threshold(instrument)
-            print("High Voltage Alarm Threshold changed successfully.")
-        elif user_choice == 2:
-            set_low_voltage_alarm_threshold(instrument)
-            print("Low Voltage Alarm Threshold changed successfully.")
-        elif user_choice == 3:
-            new_address = set_slave_address(instrument)
-            if new_address != SLAVE_ADDRESS:
-                print("Slave Address changed successfully.")
-                instrument = connect_modbus_device(DEVICE_PORT, DEVICE_BAUDRATE, DEVICE_PARITY)
+        
+        try:
+            if user_choice == 1:
+                set_high_voltage_alarm_threshold(instrument)
+                print("High Voltage Alarm Threshold changed successfully.")
+            elif user_choice == 2:
+                set_low_voltage_alarm_threshold(instrument)
+                print("Low Voltage Alarm Threshold changed successfully.")
+            elif user_choice == 3:
+                new_address = set_slave_address(instrument)
+                if new_address != SLAVE_ADDRESS:
+                    print("Slave Address changed successfully.")
+                    instrument = connect_modbus_device(DEVICE_PORT, DEVICE_BAUDRATE, DEVICE_PARITY, DEVICE_STOPBITS)
+                else:
+                    print("Failed to change Slave Address.")
+            elif user_choice == 4:
+                set_current_range(instrument)
+                print("Current Range changed successfully.")
+            elif user_choice == 5:
+                reset_energy(instrument)
+            elif user_choice == 6:
+                break
             else:
-                print("Failed to change Slave Address.")
-        elif user_choice == 4:
-            set_current_range(instrument)
-            print("Current Range changed successfully.")
-        elif user_choice == 5:
-            reset_energy(instrument)
-        elif user_choice == 6:
-            break
-        else:
-            print("Invalid choice. Please try again.")
-
+                print("Invalid choice. Please try again.")
+        finally:
+            time.sleep(1)
+            instrument.serial.close()
+            
 if __name__ == "__main__":
     main()
