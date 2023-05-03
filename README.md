@@ -1,6 +1,6 @@
-# PZEM-004T & PZEM-017 Modbus Interface
+# PZEM-017 Modbus Interface
 
-This repository contains two Python scripts for interfacing with PZEM-004T and PZEM-017 Modbus energy monitoring devices. The scripts allow you to read the data from the devices and change their parameters.
+This repository contains two Python scripts for interfacing with PZEM-017 Modbus energy monitoring devices. The scripts allow you to read the data from the devices and change their parameters.
 
 ## Table of Contents
 
@@ -17,7 +17,7 @@ This repository contains two Python scripts for interfacing with PZEM-004T and P
 - Python 3
 - minimalmodbus Python library
 - pySerial Python library
-- PZEM-004T or PZEM-017 energy monitoring device
+- PZEM-017 energy monitoring device
 - USB to RS485 converter (e.g., FTDI USB-RS485 Cable)
 
 ## Installation
@@ -33,7 +33,7 @@ This repository contains two Python scripts for interfacing with PZEM-004T and P
 3. Clone this repository or download the Python scripts `pzem_reading.py` and `change_settings.py`.
 
 ```
-git clone https://github.com/yourusername/PZEM017modbus.git
+git clone https://github.com/croutonso/PZEM017modbus.git
 ```
 
 4. Connect the PZEM device to your Raspberry Pi or Linux system using a USB to RS485 converter.
@@ -42,7 +42,7 @@ git clone https://github.com/yourusername/PZEM017modbus.git
 
 ### pzem_reading.py
 
-This script reads data from the PZEM-004T or PZEM-017 device and displays the voltage, current, power, and energy values.
+This script reads data from the PZEM-017 device and displays the voltage, current, power, and energy values.
 
 1. Open `pzem_reading.py` in a text editor and set the `DEVICE_ADDRESS`, `PORT`, and other parameters according to your device and connection.
 
@@ -58,7 +58,7 @@ This script reads data from the PZEM-004T or PZEM-017 device and displays the vo
 
 ### change_settings.py
 
-This script allows you to change the parameters of the PZEM-004T or PZEM-017 device, such as high and low voltage alarm thresholds, slave address, and current range (PZEM-017 only).
+This script allows you to change the parameters of the PZEM-017 device, such as high and low voltage alarm thresholds, slave address, and current range (PZEM-017 only).
 
 1. Open `change_settings.py` in a text editor and set the `SLAVE_ADDRESS`, `DEVICE_PORT`, and other parameters according to your device and connection.
 
@@ -94,8 +94,7 @@ A: Check the following:
 
 A: You can find more information about the devices on their respective product pages:
 
-- [PZEM-004T product page](https://innovatorsguru.com/pzem-004t-v3/)
-- [PZEM-017 product page](https://www.aliexpress.com/item/32802798782.html)
+- [PZEM-017 info page](https://solarduino.com/pzem-017-dc-energy-meter-with-arduino/)
 
 **Q: How do I identify the correct port for my device on my Raspberry Pi or Linux system?**
 
