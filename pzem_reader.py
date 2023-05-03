@@ -9,6 +9,7 @@ PORT = '/dev/ttyUSB0'
 def read_pzem_data():
     instrument = minimalmodbus.Instrument(PORT, DEVICE_ADDRESS)
     instrument.serial.baudrate = BAUD_RATE
+    instrument.serial.stopbits = 2
     instrument.serial.timeout = TIMEOUT
     instrument.mode = minimalmodbus.MODE_RTU
 
