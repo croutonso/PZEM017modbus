@@ -1,5 +1,6 @@
 import minimalmodbus
 import serial
+import time
 from contextlib import closing
 
 DEVICE_ADDRESS = 0x01
@@ -34,6 +35,7 @@ def read_pzem_data():
         print(f"Error: {e}")
         
     finally:
+        time.sleep(1)
         instrument.serial.close()
 
 if __name__ == "__main__":
