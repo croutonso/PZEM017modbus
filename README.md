@@ -1,3 +1,5 @@
+![Picture of PZEM-017 dive from amazon](https://github.com/croutonso/PZEM017modbus/blob/main/imgs/device.jpg?raw=true)
+
 # PZEM-017 Modbus Interface
 
 This repository contains two Python scripts for interfacing with PZEM-017 Modbus energy monitoring devices. The scripts allow you to read the data from the devices and change their parameters.
