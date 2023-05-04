@@ -20,96 +20,95 @@ def connect_modbus_device(port, baudrate, parity, stopbits):
 
 def read_current_values(instrument):
     with closing(instrument.serial):
-        time.sleep(1)
-        high_voltage_alarm = instrument.read_register(0x0000, functioncode=4)
-        low_voltage_alarm = instrument.read_register(0x0001, functioncode=4)
-        slave_address = instrument.read_register(0x0002, functioncode=4)
-        current_range = instrument.read_register(0x0003, functioncode=4)
+        high_voltage_alarm = instrument.read_register(0x0000, functioncode=3) / 100.0
+        low_voltage_alarm = instrument.read_register(0x0001, functioncode=3) / 100.0
+        slave_address = instrument.read_register(0x0002, functioncode=3)
+        current_range = instrument.read_register(0x0003, functioncode=3)
         return high_voltage_alarm, low_voltage_alarm, slave_address, current_range
 
 def display_menu(current_values):
     print("\nSelect the parameter to change:")
-    print("1. Set High Voltage Alarm Threshold (Current: {} V, Default: 250 V)".format(current_values[0]))
-    print("2. Set Low Voltage Alarm Threshold (Current: {} V, Default: 0 V)".format(current_values[1]))
+    print("1. Set High Voltage Alarm Threshold (Current: {:.2f} V, Default: 300 V)".format(current_values[0]))
+    print("2. Set Low Voltage Alarm Threshold (Current: {:.2f} V, Default: 7 V)".format(current_values[1]))
     print("3. Set Slave Address (Current: {}, Default: 1)".format(current_values[2]))
-    print("4. Set Current Range (PZEM-017 only) (Current: {}, Default: 0)".format(current_values[3]))
+    print("4. Set Current Range (Current: {}, Default: 0)".format(CURRENT_RANGE_MAPPING[current_values[3]]))
     print("5. Reset Energy")
     print("6. Exit")
 
 def set_high_voltage_alarm_threshold(instrument):
-    value = int(input("Enter the new High Voltage Alarm Threshold (0-300 V): "))
+    value = int(input("Enter the new High Voltage Alarm Threshold (5-350 V): "))
     with closing(instrument.serial):
-        instrument.write_register(0x0000, value, functioncode=6)
+        instrument.write_register(0x0000, value * 100, functioncode=6)
+    print("High Voltage Alarm Threshold successfully updated.")
 
 def set_low_voltage_alarm_threshold(instrument):
-    value = int(input("Enter the new Low Voltage Alarm Threshold (0-300 V): "))
+    value = int(input("Enter the new Low Voltage Alarm Threshold (1-350 V): "))
     with closing(instrument.serial):
-        instrument.write_register(0x0001, value, functioncode=6)
+        instrument.write_register(0x0001, value * 100, functioncode=6)
+    print("Low Voltage Alarm Threshold successfully updated.")
 
 def set_slave_address(instrument):
     value = int(input("Enter the new Slave Address (1-247): "))
     with closing(instrument.serial):
         instrument.write_register(0x0002, value, functioncode=6)
+    print("Slave Address successfully updated.")
     return value
 
 def set_current_range(instrument):
-    value = int(input("Enter the new Current Range (0 for 5 A, 1 for 100 A): "))
-    with closing(instrument.serial):
-        instrument.write_register(0x0003, value, functioncode=6)
+    print("Enter the new Current Range:")
+    print("0. 100 A")
+    print("1. 50 A")
+    print("2. 200 A")
+    print("3. 300 A")
+
+    value = int(input("Enter your choice: "))
+
+    if value in [0, 1, 2, 3]:
+        with closing(instrument.serial):
+            instrument.write_register(0x0003, value, functioncode=6)
+        print("Current Range successfully updated.")
+    else:
+        print("Invalid choice. Returning to the main menu.")
 
 def reset_energy(instrument):
-    with closing(instrument.serial):
-        instrument.write_register(0x0005, 0, functioncode=6)
+    instrument._perform_command(0x42, '')
+    print("Energy successfully reset.")
+
+CURRENT_RANGE_MAPPING = {
+    0: "100 A",
+    1: "50 A",
+    2: "200 A",
+    3: "300 A",
+}
 
 def main():
     instrument = connect_modbus_device(DEVICE_PORT, DEVICE_BAUDRATE, DEVICE_PARITY, DEVICE_STOPBITS)
-    
     while True:
-        current_values = read_current_values(instrument)
-        display_menu(current_values)
-        user_choice = int(input("Enter your choice: "))
-        
         try:
-            if user_choice == 1:
+            current_values = read_current_values(instrument)
+            display_menu(current_values)
+            choice = int(input("Enter your choice: "))
+            if choice == 1:
                 set_high_voltage_alarm_threshold(instrument)
-                print("High Voltage Alarm Threshold changed successfully.")
-                instrument.serial.close()
-            elif user_choice == 2:
+            elif choice == 2:
                 set_low_voltage_alarm_threshold(instrument)
-                print("Low Voltage Alarm Threshold changed successfully.")
-                instrument.serial.close()
-            elif user_choice == 3:
+            elif choice == 3:
                 new_address = set_slave_address(instrument)
-                instrument.serial.close()
-                if new_address != SLAVE_ADDRESS:
-                    print("Slave Address changed successfully.")
-                    instrument = connect_modbus_device(DEVICE_PORT, DEVICE_BAUDRATE, DEVICE_PARITY, DEVICE_STOPBITS)
-                else:
-                    print("Failed to change Slave Address.")
-            elif user_choice == 4:
+                instrument.address = new_address
+            elif choice == 4:
                 set_current_range(instrument)
-                print("Current Range changed successfully.")
-                instrument.serial.close()
-            elif user_choice == 5:
+            elif choice == 5:
                 reset_energy(instrument)
-                instrument.serial.close()
-            elif user_choice == 6:
+            elif choice == 6:
                 break
             else:
-                print("Invalid choice. Please try again.")
-                instrument.serial.close()
-        except minimalmodbus.NoResponseError as e:
-            print(f"Error: {e}")
-            print("Please make sure the device is connected and the correct port is specified.")
-            break
-        
+                print("Invalid choice.")
+        except minimalmodbus.NoResponseError:
+            print("No response from the device. Please check the connection and try again.")
+        except minimalmodbus.InvalidResponseError as e:
+            print("Invalid response from the device: {}".format(str(e)))
         except Exception as e:
-            print(f"Error: {e}")
-            break
-        
-    if instrument.serial.is_open:
-        instrument.serial.close()
-        
+            print("An unexpected error occurred: {}".format(str(e)))
+
 if __name__ == "__main__":
     main()
-    
