@@ -58,7 +58,7 @@ def set_slave_address(instrument):
     value = int(input("Enter the new Slave Address (1-247): "))
     with closing(instrument.serial):
         instrument.write_register(0x0002, value, functioncode=6)
-    print("Slave Address successfully updated.")
+    print("Slave Address successfully updated. Please exit, then edit the slave variable in the file to continue changing settings.")
     return value
 
 # Function to set the current range
@@ -77,12 +77,12 @@ def set_current_range(instrument):
         print("Current Range successfully updated.")
     else:
         print("Invalid choice. Returning to the main menu.")
-        
+
 # Function to reset the energy
 def reset_energy(instrument):
     instrument._perform_command(0x42, '')
     print("Energy successfully reset.")
-    
+
 # Mapping for the current range values
 CURRENT_RANGE_MAPPING = {
     0: "100 A",
@@ -94,6 +94,7 @@ CURRENT_RANGE_MAPPING = {
 # Main function to run the script
 def main():
     instrument = connect_modbus_device(DEVICE_PORT, DEVICE_BAUDRATE, DEVICE_PARITY, DEVICE_STOPBITS)
+    no_response_retries = 5
     while True:
         try:
             current_values = read_current_values(instrument)
@@ -115,13 +116,17 @@ def main():
             else:
                 print("Invalid choice.")
         except minimalmodbus.NoResponseError:
-            print("No response from the device. Please check the connection and try again.")
+            no_response_retries -= 1
+            if no_response_retries > 0:
+                print("No response from the device. Please check the connection and try again.")
+            else:
+                print("No response from the device after multiple attempts. Exiting.")
+                break
         except minimalmodbus.InvalidResponseError as e:
             print("Invalid response from the device: {}".format(str(e)))
         except Exception as e:
             print("An unexpected error occurred: {}".format(str(e)))
-            
+
 # Run the main function if this script is executed
 if __name__ == "__main__":
     main()
-    
