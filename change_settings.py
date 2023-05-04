@@ -3,12 +3,14 @@ import serial
 import time
 from contextlib import closing
 
+# Device settings
 SLAVE_ADDRESS = 0x01
 DEVICE_PORT = '/dev/ttyUSB0'
 DEVICE_BAUDRATE = 9600
 DEVICE_PARITY = serial.PARITY_NONE
 DEVICE_STOPBITS = 2
 
+# Function to establish a connection with the modbus device
 def connect_modbus_device(port, baudrate, parity, stopbits):
     instrument = minimalmodbus.Instrument(port, SLAVE_ADDRESS)
     instrument.serial.baudrate = baudrate
@@ -18,6 +20,7 @@ def connect_modbus_device(port, baudrate, parity, stopbits):
     instrument.serial.timeout = 1
     return instrument
 
+# Function to read the current values from the device
 def read_current_values(instrument):
     with closing(instrument.serial):
         high_voltage_alarm = instrument.read_register(0x0000, functioncode=3) / 100.0
@@ -26,6 +29,7 @@ def read_current_values(instrument):
         current_range = instrument.read_register(0x0003, functioncode=3)
         return high_voltage_alarm, low_voltage_alarm, slave_address, current_range
 
+# Function to display the main menu
 def display_menu(current_values):
     print("\nSelect the parameter to change:")
     print("1. Set High Voltage Alarm Threshold (Current: {:.2f} V, Default: 300 V)".format(current_values[0]))
@@ -35,18 +39,21 @@ def display_menu(current_values):
     print("5. Reset Energy")
     print("6. Exit")
 
+# Function to set the high voltage alarm threshold
 def set_high_voltage_alarm_threshold(instrument):
     value = int(input("Enter the new High Voltage Alarm Threshold (5-350 V): "))
     with closing(instrument.serial):
         instrument.write_register(0x0000, value * 100, functioncode=6)
     print("High Voltage Alarm Threshold successfully updated.")
 
+# Function to set the low voltage alarm threshold
 def set_low_voltage_alarm_threshold(instrument):
     value = int(input("Enter the new Low Voltage Alarm Threshold (1-350 V): "))
     with closing(instrument.serial):
         instrument.write_register(0x0001, value * 100, functioncode=6)
     print("Low Voltage Alarm Threshold successfully updated.")
 
+# Function to set the slave address
 def set_slave_address(instrument):
     value = int(input("Enter the new Slave Address (1-247): "))
     with closing(instrument.serial):
@@ -54,6 +61,7 @@ def set_slave_address(instrument):
     print("Slave Address successfully updated.")
     return value
 
+# Function to set the current range
 def set_current_range(instrument):
     print("Enter the new Current Range:")
     print("0. 100 A")
@@ -69,11 +77,13 @@ def set_current_range(instrument):
         print("Current Range successfully updated.")
     else:
         print("Invalid choice. Returning to the main menu.")
-
+        
+# Function to reset the energy
 def reset_energy(instrument):
     instrument._perform_command(0x42, '')
     print("Energy successfully reset.")
-
+    
+# Mapping for the current range values
 CURRENT_RANGE_MAPPING = {
     0: "100 A",
     1: "50 A",
@@ -81,6 +91,7 @@ CURRENT_RANGE_MAPPING = {
     3: "300 A",
 }
 
+# Main function to run the script
 def main():
     instrument = connect_modbus_device(DEVICE_PORT, DEVICE_BAUDRATE, DEVICE_PARITY, DEVICE_STOPBITS)
     while True:
@@ -109,6 +120,8 @@ def main():
             print("Invalid response from the device: {}".format(str(e)))
         except Exception as e:
             print("An unexpected error occurred: {}".format(str(e)))
-
+            
+# Run the main function if this script is executed
 if __name__ == "__main__":
     main()
+    
